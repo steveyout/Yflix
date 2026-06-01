@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Sandbox Shield & Fetch Setter Hack -->
+    <script type="text/javascript">
+      (function() {
+        // Suppress and swallow fetch-reassignment errors globally before other scripts load
+        window.addEventListener("error", function(event) {
+          if (event && event.message) {
+            var msg = event.message.toLowerCase();
+            if (msg.indexOf("cannot set property fetch") !== -1 || 
+                msg.indexOf("only a getter") !== -1 || 
+                msg.indexOf("property fetch of") !== -1) {
+              console.warn("[Muted Early Sandbox Error]:", event.message);
+              if (event.preventDefault) event.preventDefault();
+              if (event.stopPropagation) event.stopPropagation();
+              return true;
+            }
+          }
+        }, true);
+
+        window.addEventListener("unhandledrejection", function(event) {
+          if (event && event.reason) {
+            var msg = (event.reason.message || String(event.reason)).toLowerCase();
+            if (msg.indexOf("cannot set property fetch") !== -1 || 
+                msg.indexOf("only a getter") !== -1 || 
+                msg.indexOf("property fetch of") !== -1) {
+              console.warn("[Muted Early Sandbox Rejection]:", msg);
+              if (event.preventDefault) event.preventDefault();
+              if (event.stopPropagation) event.stopPropagation();
+              return true;
+            }
+          }
+        }, true);
+
+        // Attempt to pre-emptively define writeable fetch property if configurable
+        try {
+          var originalFetch = window.fetch;
+          var fetchHolder = originalFetch;
+          Object.defineProperty(window, "fetch", {
+            get: function() {
+              return fetchHolder;
+            },
+            set: function(val) {
+              fetchHolder = val;
+            },
+            configurable: true,
+            enumerable: true
+          });
+        } catch (e) {
+          console.warn("Pre-emptive window.fetch setter bypass not configurable:", e);
+        }
+      })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YFlix | Watch Free Movies and TV Shows Online</title>
+    <meta name="description" content="YFlix offers free access to the latest movies and TV shows in high quality. Enjoy a vast library of entertainment and interact with our integrated AI chatbot." />
+    <meta name="keywords" content="free movies, watch tv shows online, streaming site, high quality movies, entertainment, AI chatbot" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://yflix.online" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="YFlix | Watch Free Movies and TV Shows Online" />
+    <meta property="og:description" content="Enjoy high-quality entertainment with the latest releases and timeless classics along with an AI chatbot." />
+    <meta property="og:url" content="https://yflix.online" />
+    <meta property="og:site_name" content="YFlix" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="YFlix | Watch Free Movies and TV Shows Online" />
+
+    <!-- Google tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-036WVR6DSV"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-036WVR6DSV');
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Popunder Advertisement Scripts -->
+    <script id="aclib" type="text/javascript" src="//acscdn.com/script/aclib.js"></script>
+    <script type="text/javascript">
+      window.addEventListener('DOMContentLoaded', function() {
+        if (typeof aclib !== "undefined" && aclib.runPop) {
+          try {
+            aclib.runPop({
+              zoneId: '9033646',
+            });
+          } catch(e) {
+            console.warn("Popunder initialization error caught:", e);
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
+

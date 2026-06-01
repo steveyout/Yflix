@@ -1,0 +1,10 @@
+{
+  "name": "YFlix Cinema",
+  "description": "A sleek, dark-themed movie and series streaming clone powered by TMDB and multiple high-performance streaming servers with smooth animations.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
