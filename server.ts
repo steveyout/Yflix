@@ -36,7 +36,7 @@ app.get("/api/config-status", (req, res) => {
   });
 });
 
-// Helper to make secure headers requests to TMDB
+// Helper to make secure headers requests to TMDB with automatic retries for transient failures
 async function fetchFromTMDB(endpoint: string, params: Record<string, string> = {}) {
   if (!isConfigured()) {
     throw new Error("TMDB_ACCESS_TOKEN is missing or unconfigured. Please check environment variables.");
@@ -45,25 +45,43 @@ async function fetchFromTMDB(endpoint: string, params: Record<string, string> = 
   const queryParams = new URLSearchParams(params).toString();
   const url = `${TMDB_BASE_URL}${endpoint}${queryParams ? `?${queryParams}` : ""}`;
 
-  try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${TMDB_ACCESS_TOKEN}`,
-      },
-    });
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY_MS = 1000;
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`TMDB API Error details for ${endpoint}: Status ${response.status}`, errorText);
-      throw new Error(`TMDB responded with status ${response.status}: ${response.statusText}`);
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          accept: "application/json",
+          Authorization: `Bearer ${TMDB_ACCESS_TOKEN}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`TMDB API Error details for ${endpoint}: Status ${response.status}`, errorText);
+        
+        // Retry on server errors (5xx)
+        if (response.status >= 500 && attempt < MAX_RETRIES) {
+          console.warn(`[Backend API Retry] TMDB returned status ${response.status}. Retrying ${attempt + 1}/${MAX_RETRIES} in ${RETRY_DELAY_MS}ms... URL: ${url}`);
+          await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+          continue;
+        }
+        throw new Error(`TMDB responded with status ${response.status}: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error: any) {
+      const isLastAttempt = attempt === MAX_RETRIES;
+      if (!isLastAttempt) {
+        console.warn(`[Backend API Retry] Fetch failure on ${endpoint} (${error.message || error}). Retrying ${attempt + 1}/${MAX_RETRIES} in ${RETRY_DELAY_MS}ms...`);
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+        continue;
+      }
+      console.error(`[Backend API Error] Max retries reached or unrecoverable fetch failure on endpoint ${endpoint}:`, error);
+      throw error;
     }
-
-    return await response.json();
-  } catch (error: any) {
-    console.error(`Fetch failure on endpoint ${endpoint}:`, error);
-    throw error;
   }
 }
 
