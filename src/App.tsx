@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { AnimatePresence } from "motion/react";
 import { Film, Tv, Library, History, AlertCircle, Sparkles, Flame, ThumbsUp, HelpCircle, HeartOff, SearchCode, Eye, Play, Trash2 } from "lucide-react";
+import axios from "axios";
+import axiosRetry from "axios-retry";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import MovieRow from "./components/MovieRow";
@@ -9,6 +11,26 @@ import PlayerView from "./components/PlayerView";
 import AdBanner from "./components/AdBanner";
 import { SkeletonHero, SkeletonRow, SkeletonGrid } from "./components/Skeletons";
 import { MovieOrTV, Season } from "./types/movie";
+
+// Configure automated Axios client instance with robust retry configurations
+const api = axios.create({
+  timeout: 10000, // 10 second threshold before timing out
+});
+
+axiosRetry(api, {
+  retries: 3, // Fallback retry threshold
+  retryDelay: (retryCount) => {
+    // Exponential backoff strategy: 1s, 2s, 4s...
+    return axiosRetry.exponentialDelay(retryCount);
+  },
+  retryCondition: (error) => {
+    // Retry on network/idempotent errors or explicit rate limiting/5xx failures
+    return (
+        axiosRetry.isNetworkOrIdempotentRequestError(error) ||
+        (error.response ? error.response.status === 429 || error.response.status >= 500 : false)
+    );
+  },
+});
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<"home" | "movie" | "tv" | "watchlist" | "history">("home");
@@ -38,7 +60,7 @@ export default function App() {
   // Watchlist & History
   const [watchlist, setWatchlist] = useState<MovieOrTV[]>([]);
   const [playbackHistory, setPlaybackHistory] = useState<
-    { item: MovieOrTV; watchedAt: string; season?: number; episode?: number }[]
+      { item: MovieOrTV; watchedAt: string; season?: number; episode?: number }[]
   >([]);
 
   // 1. Initial State Hydration (Watchlist & History)
@@ -57,43 +79,38 @@ export default function App() {
   // 2. Refresh Config & Media collections on launch
   useEffect(() => {
     // Check config status
-    fetch("/api/config-status")
-      .then((res) => res.json())
-      .then((status) => setConfigStatus(status))
-      .catch((err) => console.error("Config status check fail:", err));
+    api.get("/api/config-status")
+        .then((res) => setConfigStatus(res.data))
+        .catch((err) => console.error("Config status check fail:", err));
 
     // Fetch lists
-    const p1 = fetch("/api/movies/trending")
-      .then((res) => res.json())
-      .then((data) => setTrending(data.results || []))
-      .catch((err) => console.error("Failed to load trending highlights:", err));
+    const p1 = api.get("/api/movies/trending")
+        .then((res) => setTrending(res.data.results || []))
+        .catch((err) => console.error("Failed to load trending highlights:", err));
 
-    const p2 = fetch("/api/movies/popular?type=movie")
-      .then((res) => res.json())
-      .then((data) => setPopularMovies((data.results || []).map((m: any) => ({ ...m, media_type: "movie" }))))
-      .catch((err) => console.error("Failed to load popular movies:", err));
+    const p2 = api.get("/api/movies/popular", { params: { type: "movie" } })
+        .then((res) => setPopularMovies((res.data.results || []).map((m: any) => ({ ...m, media_type: "movie" }))))
+        .catch((err) => console.error("Failed to load popular movies:", err));
 
-    const p3 = fetch("/api/movies/popular?type=tv")
-      .then((res) => res.json())
-      .then((data) => setPopularShows((data.results || []).map((t: any) => ({ ...t, media_type: "tv" }))))
-      .catch((err) => console.error("Failed to load popular TV:", err));
+    const p3 = api.get("/api/movies/popular", { params: { type: "tv" } })
+        .then((res) => setPopularShows((res.data.results || []).map((t: any) => ({ ...t, media_type: "tv" }))))
+        .catch((err) => console.error("Failed to load popular TV:", err));
 
-    const p4 = fetch("/api/movies/top-rated?type=movie")
-      .then((res) => res.json())
-      .then((data) => setTopRated((data.results || []).map((m: any) => ({ ...m, media_type: "movie" }))))
-      .catch((err) => console.error("Failed to load top-rated movies:", err));
+    const p4 = api.get("/api/movies/top-rated", { params: { type: "movie" } })
+        .then((res) => setTopRated((res.data.results || []).map((m: any) => ({ ...m, media_type: "movie" }))))
+        .catch((err) => console.error("Failed to load top-rated movies:", err));
 
-    const p5 = fetch("/api/movies/genres")
-      .then((res) => res.json())
-      .then((data) => {
-        // combine unique genres
-        const combined = [...(data.movie || []), ...(data.tv || [])];
-        const unique = combined.filter((genre, index, self) =>
-          self.findIndex((g) => g.id === genre.id) === index
-        );
-        setGenres(unique);
-      })
-      .catch((err) => console.error("Failed to load genres:", err));
+    const p5 = api.get("/api/movies/genres")
+        .then((res) => {
+          const data = res.data;
+          // combine unique genres
+          const combined = [...(data.movie || []), ...(data.tv || [])];
+          const unique = combined.filter((genre, index, self) =>
+              self.findIndex((g) => g.id === genre.id) === index
+          );
+          setGenres(unique);
+        })
+        .catch((err) => console.error("Failed to load genres:", err));
 
     Promise.allSettled([p1, p2, p3, p4, p5]).then(() => {
       setLoadingInitial(false);
@@ -105,13 +122,13 @@ export default function App() {
     if (selectedGenreId) {
       setLoadingGenreDiscover(true);
       const categoryType = activeTab === "tv" ? "tv" : "movie";
-      fetch(`/api/movies/genre/${selectedGenreId}?type=${categoryType}`)
-        .then((res) => res.json())
-        .then((data) => {
-          setGenreDiscoveredItems((data.results || []).map((item: any) => ({ ...item, media_type: categoryType })));
-        })
-        .catch((err) => console.error("Genre discover fetch failed:", err))
-        .finally(() => setLoadingGenreDiscover(false));
+
+      api.get(`/api/movies/genre/${selectedGenreId}`, { params: { type: categoryType } })
+          .then((res) => {
+            setGenreDiscoveredItems((res.data.results || []).map((item: any) => ({ ...item, media_type: categoryType })));
+          })
+          .catch((err) => console.error("Genre discover fetch failed:", err))
+          .finally(() => setLoadingGenreDiscover(false));
     } else {
       setGenreDiscoveredItems([]);
     }
@@ -127,13 +144,12 @@ export default function App() {
 
     setSearching(true);
     const delayDebounce = setTimeout(() => {
-      fetch(`/api/movies/search?query=${encodeURIComponent(searchQuery)}`)
-        .then((res) => res.json())
-        .then((data) => {
-          setSearchResults(data.results || []);
-        })
-        .catch((err) => console.error("Search API reporting errors:", err))
-        .finally(() => setSearching(false));
+      api.get("/api/movies/search", { params: { query: searchQuery } })
+          .then((res) => {
+            setSearchResults(res.data.results || []);
+          })
+          .catch((err) => console.error("Search API reporting errors:", err))
+          .finally(() => setSearching(false));
     }, 450);
 
     return () => clearTimeout(delayDebounce);
