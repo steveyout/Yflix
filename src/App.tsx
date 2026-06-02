@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { AnimatePresence } from "motion/react";
-import { Film, Tv, Library, History, AlertCircle, Sparkles, Flame, ThumbsUp, HelpCircle, HeartOff, SearchCode, Eye, Play, Trash2 } from "lucide-react";
-import axios from "axios";
-import axiosRetry from "axios-retry";
+import { motion, AnimatePresence } from "motion/react";
+import { Film, Tv, Library, History, AlertCircle, Sparkles, Flame, ThumbsUp, HelpCircle, HeartOff, SearchCode, Eye, Play, Trash2, ArrowUp } from "lucide-react";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import MovieRow from "./components/MovieRow";
@@ -11,26 +9,7 @@ import PlayerView from "./components/PlayerView";
 import AdBanner from "./components/AdBanner";
 import { SkeletonHero, SkeletonRow, SkeletonGrid } from "./components/Skeletons";
 import { MovieOrTV, Season } from "./types/movie";
-
-// Configure automated Axios client instance with robust retry configurations
-const api = axios.create({
-  timeout: 10000, // 10 second threshold before timing out
-});
-
-axiosRetry(api, {
-  retries: 3, // Fallback retry threshold
-  retryDelay: (retryCount) => {
-    // Exponential backoff strategy: 1s, 2s, 4s...
-    return axiosRetry.exponentialDelay(retryCount);
-  },
-  retryCondition: (error) => {
-    // Retry on network/idempotent errors or explicit rate limiting/5xx failures
-    return (
-        axiosRetry.isNetworkOrIdempotentRequestError(error) ||
-        (error.response ? error.response.status === 429 || error.response.status >= 500 : false)
-    );
-  },
-});
+import api from "./api";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<"home" | "movie" | "tv" | "watchlist" | "history">("home");
@@ -39,6 +18,8 @@ export default function App() {
   const [searching, setSearching] = useState(false);
   const [configStatus, setConfigStatus] = useState<{ configured: boolean; baseUrl: string } | null>(null);
   const [loadingInitial, setLoadingInitial] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   // Home Lists State
   const [trending, setTrending] = useState<MovieOrTV[]>([]);
@@ -60,7 +41,7 @@ export default function App() {
   // Watchlist & History
   const [watchlist, setWatchlist] = useState<MovieOrTV[]>([]);
   const [playbackHistory, setPlaybackHistory] = useState<
-      { item: MovieOrTV; watchedAt: string; season?: number; episode?: number }[]
+    { item: MovieOrTV; watchedAt: string; season?: number; episode?: number }[]
   >([]);
 
   // 1. Initial State Hydration (Watchlist & History)
@@ -76,45 +57,85 @@ export default function App() {
     }
   }, []);
 
+  // Back to Top button scroll listener
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 400) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
   // 2. Refresh Config & Media collections on launch
   useEffect(() => {
-    // Check config status
-    api.get("/api/config-status")
-        .then((res) => setConfigStatus(res.data))
-        .catch((err) => console.error("Config status check fail:", err));
+    const fetchMovieCatalog = async () => {
+      setIsLoading(true);
+      try {
+        // Concurrently query proxied endpoints
+        const [
+          trendingRes, 
+          nowPlayingRes, 
+          topRatedRes, 
+          upcomingRes,
+          trendingTVRes,
+          popularTVRes,
+          topRatedTVRes,
+          configStatusRes,
+          genresRes
+        ] = await Promise.all([
+          api.getTrending().catch(() => ({ results: [] })),
+          api.getNowPlaying().catch(() => ({ results: [] })),
+          api.getTopRated().catch(() => ({ results: [] })),
+          api.getUpcoming().catch(() => ({ results: [] })),
+          api.getTrendingTV().catch(() => ({ results: [] })),
+          api.getPopularTV().catch(() => ({ results: [] })),
+          api.getTopRatedTV().catch(() => ({ results: [] })),
+          api.getConfigStatus().catch(() => ({ configured: false, baseUrl: "" })),
+          api.getGenres().catch(() => ({ movie: [], tv: [] }))
+        ]);
 
-    // Fetch lists
-    const p1 = api.get("/api/movies/trending")
-        .then((res) => setTrending(res.data.results || []))
-        .catch((err) => console.error("Failed to load trending highlights:", err));
+        const trendingList = trendingRes.results || [];
+        const nowPlayingList = nowPlayingRes.results || [];
+        const topRatedList = topRatedRes.results || [];
+        const upcomingList = upcomingRes.results || [];
+        const trendingTVList = trendingTVRes.results || [];
+        const popularTVList = popularTVRes.results || [];
+        const topRatedTVList = topRatedTVRes.results || [];
 
-    const p2 = api.get("/api/movies/popular", { params: { type: "movie" } })
-        .then((res) => setPopularMovies((res.data.results || []).map((m: any) => ({ ...m, media_type: "movie" }))))
-        .catch((err) => console.error("Failed to load popular movies:", err));
+        // Map responses to original application States
+        setTrending(trendingList);
+        setPopularMovies(nowPlayingList.map((m: any) => ({ ...m, media_type: "movie" })));
+        setPopularShows(popularTVList.map((t: any) => ({ ...t, media_type: "tv" })));
+        setTopRated(topRatedList.map((m: any) => ({ ...m, media_type: "movie" })));
+        
+        setConfigStatus(configStatusRes);
 
-    const p3 = api.get("/api/movies/popular", { params: { type: "tv" } })
-        .then((res) => setPopularShows((res.data.results || []).map((t: any) => ({ ...t, media_type: "tv" }))))
-        .catch((err) => console.error("Failed to load popular TV:", err));
+        // Combine and uniquely identify genre list
+        const combined = [...(genresRes.movie || []), ...(genresRes.tv || [])];
+        const unique = combined.filter((genre, index, self) =>
+          self.findIndex((g) => g.id === genre.id) === index
+        );
+        setGenres(unique);
+      } catch (err) {
+        console.error("Failed to load catalog with Axios:", err);
+      } finally {
+        setIsLoading(false);
+        setLoadingInitial(false);
+      }
+    };
 
-    const p4 = api.get("/api/movies/top-rated", { params: { type: "movie" } })
-        .then((res) => setTopRated((res.data.results || []).map((m: any) => ({ ...m, media_type: "movie" }))))
-        .catch((err) => console.error("Failed to load top-rated movies:", err));
-
-    const p5 = api.get("/api/movies/genres")
-        .then((res) => {
-          const data = res.data;
-          // combine unique genres
-          const combined = [...(data.movie || []), ...(data.tv || [])];
-          const unique = combined.filter((genre, index, self) =>
-              self.findIndex((g) => g.id === genre.id) === index
-          );
-          setGenres(unique);
-        })
-        .catch((err) => console.error("Failed to load genres:", err));
-
-    Promise.allSettled([p1, p2, p3, p4, p5]).then(() => {
-      setLoadingInitial(false);
-    });
+    fetchMovieCatalog();
   }, []);
 
   // Discover movies by genre
@@ -122,13 +143,12 @@ export default function App() {
     if (selectedGenreId) {
       setLoadingGenreDiscover(true);
       const categoryType = activeTab === "tv" ? "tv" : "movie";
-
-      api.get(`/api/movies/genre/${selectedGenreId}`, { params: { type: categoryType } })
-          .then((res) => {
-            setGenreDiscoveredItems((res.data.results || []).map((item: any) => ({ ...item, media_type: categoryType })));
-          })
-          .catch((err) => console.error("Genre discover fetch failed:", err))
-          .finally(() => setLoadingGenreDiscover(false));
+      api.getGenreDiscover(selectedGenreId, categoryType)
+        .then((data) => {
+          setGenreDiscoveredItems((data.results || []).map((item: any) => ({ ...item, media_type: categoryType })));
+        })
+        .catch((err) => console.error("Genre discover fetch failed:", err))
+        .finally(() => setLoadingGenreDiscover(false));
     } else {
       setGenreDiscoveredItems([]);
     }
@@ -144,12 +164,12 @@ export default function App() {
 
     setSearching(true);
     const delayDebounce = setTimeout(() => {
-      api.get("/api/movies/search", { params: { query: searchQuery } })
-          .then((res) => {
-            setSearchResults(res.data.results || []);
-          })
-          .catch((err) => console.error("Search API reporting errors:", err))
-          .finally(() => setSearching(false));
+      api.search(searchQuery)
+        .then((data) => {
+          setSearchResults(data.results || []);
+        })
+        .catch((err) => console.error("Search API reporting errors:", err))
+        .finally(() => setSearching(false));
     }, 450);
 
     return () => clearTimeout(delayDebounce);
@@ -856,6 +876,23 @@ export default function App() {
             watchlistIds={watchlistIds}
             toggleWatchlist={toggleWatchlist}
           />
+        )}
+      </AnimatePresence>
+
+      {/* --- FLOATING BACK TO TOP BUTTON --- */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            key="scroll-to-top"
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            onClick={scrollToTop}
+            className="fixed bottom-6 right-6 z-40 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-red-600 hover:bg-red-500 border border-white/10 text-white shadow-xl hover:shadow-red-600/25 transition-all duration-300 hover:scale-105 active:scale-95"
+            aria-label="Back to Top"
+          >
+            <ArrowUp className="h-5 w-5" />
+          </motion.button>
         )}
       </AnimatePresence>
     </div>

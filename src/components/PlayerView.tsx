@@ -3,6 +3,7 @@ import { Play, Tv, ArrowLeft, Layers, Film, Sparkles, MonitorPlay } from "lucide
 import { motion, AnimatePresence } from "motion/react";
 import { providers, getEmbedUrl, DEFAULT_PROVIDER_ID } from "../config/providers";
 import { MovieDetail, Episode, Season } from "../types/movie";
+import api from "../api";
 
 interface PlayerViewProps {
   mediaType: "movie" | "tv";
@@ -38,11 +39,7 @@ export default function PlayerView({
     if (mediaType === "tv") {
       setLoadingEpisodes(true);
       setEpisodesError(null);
-      fetch(`/api/movies/tv/${mediaId}/season/${currentSeason}`)
-        .then((res) => {
-          if (!res.ok) throw new Error("Could not load episodes for this season.");
-          return res.json();
-        })
+      api.getSeasonEpisodes(mediaId, currentSeason)
         .then((data) => {
           setEpisodes(data.episodes || []);
         })

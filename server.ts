@@ -105,6 +105,61 @@ app.get("/api/movies/top-rated", async (req, res) => {
   }
 });
 
+// Now Playing items API
+app.get("/api/movies/now-playing", async (req, res) => {
+  try {
+    const page = String(req.query.page || "1");
+    const data = await fetchFromTMDB("/movie/now_playing", { page });
+    res.json(data);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || "Failed to fetch now playing items" });
+  }
+});
+
+// Upcoming items API
+app.get("/api/movies/upcoming", async (req, res) => {
+  try {
+    const page = String(req.query.page || "1");
+    const data = await fetchFromTMDB("/movie/upcoming", { page });
+    res.json(data);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || "Failed to fetch upcoming items" });
+  }
+});
+
+// Trending TV shows API
+app.get("/api/movies/trending-tv", async (req, res) => {
+  try {
+    const time_window = (req.query.time_window as string) || "day";
+    const data = await fetchFromTMDB(`/trending/tv/${time_window}`);
+    res.json(data);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || "Failed to fetch trending tv shows" });
+  }
+});
+
+// Popular TV shows API
+app.get("/api/movies/popular-tv", async (req, res) => {
+  try {
+    const page = String(req.query.page || "1");
+    const data = await fetchFromTMDB("/tv/popular", { page });
+    res.json(data);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || "Failed to fetch popular tv shows" });
+  }
+});
+
+// Top Rated TV shows API
+app.get("/api/movies/top-rated-tv", async (req, res) => {
+  try {
+    const page = String(req.query.page || "1");
+    const data = await fetchFromTMDB("/tv/top_rated", { page });
+    res.json(data);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || "Failed to fetch top-rated tv shows" });
+  }
+});
+
 // Comprehensive movie search
 app.get("/api/movies/search", async (req, res) => {
   try {

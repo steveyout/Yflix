@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { MovieOrTV, DetailsAggregated, MovieDetail, CastMember } from "../types/movie";
 import AdBanner from "./AdBanner";
 import { SkeletonDetail } from "./Skeletons";
+import api from "../api";
 
 interface DetailModalProps {
   item: MovieOrTV;
@@ -33,11 +34,7 @@ export default function DetailModal({
 
     const mediaType = selectedItem.media_type || (selectedItem.first_air_date ? "tv" : "movie");
 
-    fetch(`/api/movies/details/${mediaType}/${selectedItem.id}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Credentials invalid or TMDB API reported lookup issues.");
-        return res.json();
-      })
+    api.getDetails(mediaType, selectedItem.id)
       .then((aggregated: DetailsAggregated) => {
         setData(aggregated);
       })
