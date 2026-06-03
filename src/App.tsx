@@ -895,6 +895,43 @@ export default function App() {
           </motion.button>
         )}
       </AnimatePresence>
+
+      {/* --- FLOATING SOCIAL LINKS --- */}
+      <div className="fixed bottom-6 left-6 z-40 flex items-center gap-3">
+        {/* Discord Link */}
+        <a
+          href="https://discord.gg/5eWu9Vz6tQ"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-[#5865F2] hover:bg-[#4752C4] border border-white/10 text-white shadow-xl hover:shadow-[#5865F2]/25 transition-all duration-300 hover:scale-110 active:scale-95 group relative"
+          aria-label="Join Discord"
+        >
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.094 13.094 0 0 1-1.873-.894.077.077 0 0 1-.008-.128c.126-.093.252-.19.372-.287a.075.075 0 0 1 .077-.011c3.92 1.793 8.18 1.793 12.061 0a.073.073 0 0 1 .078.009c.12.099.246.195.373.289a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.156 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.156 2.418z"/>
+          </svg>
+          {/* Tooltip */}
+          <span className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 rounded bg-zinc-900 border border-zinc-800 px-2 py-1 text-[11px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100 whitespace-nowrap shadow-md">
+            Discord
+          </span>
+        </a>
+
+        {/* Telegram Link */}
+        <a
+          href="https://t.me/youplexannouncments"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-[#24A1DE] hover:bg-[#1E8BBF] border border-white/10 text-white shadow-xl hover:shadow-[#24A1DE]/25 transition-all duration-300 hover:scale-110 active:scale-95 group relative"
+          aria-label="Join Telegram"
+        >
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.556 8.16l-1.897 8.941c-.143.633-.519.79-.1.353-.023.011-.476-.328-.773-.553-.16-.12-.315-.228-.466-.312l-2.074-1.53c-.361-.341-.09-.524.08-.696.044-.045.92-.843 1.693-1.554.354-.326.709-.652 1.011-.937.108-.102.203-.193.284-.271.189-.18.324-.308.195-.494-.038-.055-.173-.02-.34.02-.132.031-1.428.887-3.904 2.553l-.228.151c-.636.42-1.229.626-1.78.614-.606-.013-1.77-.341-2.632-.62h-.002c-.687-.223-1.234-.341-1.187-.723l.006-.024c.036-.29.432-.587 1.187-.89l3.5-.13V5.5c4.618-2.008 7.7-3.336 9.246-3.984C18.157 1.22 19 1.05 19 1.5c0 .12-.03.41-.12.59l-.025.045-.299 1.488-.002.007-.998 4.53z"/>
+          </svg>
+          {/* Tooltip */}
+          <span className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 rounded bg-zinc-900 border border-zinc-800 px-2 py-1 text-[11px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100 whitespace-nowrap shadow-md">
+            Telegram
+          </span>
+        </a>
+      </div>
     </div>
   );
 }
