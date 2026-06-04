@@ -3,6 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
+import http from "http";
 
 dotenv.config();
 
@@ -61,7 +62,7 @@ async function fetchFromTMDB(endpoint: string, params: Record<string, string> = 
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`TMDB API Error details for ${endpoint}: Status ${response.status}`, errorText);
-        
+
         // Retry on server errors (5xx)
         if (response.status >= 500 && attempt < MAX_RETRIES) {
           console.warn(`[Backend API Retry] TMDB returned status ${response.status}. Retrying ${attempt + 1}/${MAX_RETRIES} in ${RETRY_DELAY_MS}ms... URL: ${url}`);
@@ -90,8 +91,8 @@ async function fetchFromTMDB(endpoint: string, params: Record<string, string> = 
 // Trending items API (movies & tv shows combined or separated)
 app.get("/api/movies/trending", async (req, res) => {
   try {
-    const type = (req.query.type as string) || "all"; // all, movie, tv
-    const time_window = (req.query.time_window as string) || "day"; // day, week
+    const type = (req.query.type as string) || "all";
+    const time_window = (req.query.time_window as string) || "day";
     const data = await fetchFromTMDB(`/trending/${type}/${time_window}`);
     res.json(data);
   } catch (err: any) {
@@ -102,7 +103,7 @@ app.get("/api/movies/trending", async (req, res) => {
 // Popular movies or shows
 app.get("/api/movies/popular", async (req, res) => {
   try {
-    const type = (req.query.type as string) || "movie"; // movie, tv
+    const type = (req.query.type as string) || "movie";
     const page = String(req.query.page || "1");
     const data = await fetchFromTMDB(`/${type}/popular`, { page });
     res.json(data);
@@ -114,7 +115,7 @@ app.get("/api/movies/popular", async (req, res) => {
 // Top Rated movies or shows
 app.get("/api/movies/top-rated", async (req, res) => {
   try {
-    const type = (req.query.type as string) || "movie"; // movie, tv
+    const type = (req.query.type as string) || "movie";
     const page = String(req.query.page || "1");
     const data = await fetchFromTMDB(`/${type}/top_rated`, { page });
     res.json(data);
@@ -182,7 +183,7 @@ app.get("/api/movies/top-rated-tv", async (req, res) => {
 app.get("/api/movies/search", async (req, res) => {
   try {
     const query = String(req.query.query || "");
-    const type = (req.query.type as string) || "multi"; // movie, tv, multi
+    const type = (req.query.type as string) || "multi";
     const page = String(req.query.page || "1");
 
     if (!query) {
@@ -216,9 +217,9 @@ app.get("/api/movies/genres", async (req, res) => {
 app.get("/api/movies/genre/:id", async (req, res) => {
   try {
     const genreId = req.params.id;
-    const type = (req.query.type as string) || "movie"; // movie, tv
+    const type = (req.query.type as string) || "movie";
     const page = String(req.query.page || "1");
-    
+
     const data = await fetchFromTMDB(`/discover/${type}`, {
       with_genres: genreId,
       page,
@@ -234,8 +235,8 @@ app.get("/api/movies/genre/:id", async (req, res) => {
 // complete detailed compilation endpoint
 app.get("/api/movies/details/:type/:id", async (req, res) => {
   try {
-    const { type, id } = req.params; // movie, tv
-    
+    const { type, id } = req.params;
+
     const [details, credits, recommendations, videos] = await Promise.all([
       fetchFromTMDB(`/${type}/${id}`),
       fetchFromTMDB(`/${type}/${id}/credits`).catch(() => ({ cast: [], crew: [] })),
@@ -267,12 +268,21 @@ app.get("/api/movies/tv/:id/season/:season_number", async (req, res) => {
 
 // Serve Frontend Bundle
 async function startServer() {
+  const server = http.createServer(app);
+
   if (process.env.NODE_ENV !== "production") {
     console.log("[Server] Mounting Vite Middleware (Development Mode)");
+
+    // FIX: Instead of manually interception and binding 'upgrade',
+    // passing the server directly to Vite allows it to handle everything cleanly and type-safely.
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: { server } // <-- Directly hooks Vite HMR websocket handling onto our HTTP server instance
+      },
       appType: "spa",
     });
+
     app.use(vite.middlewares);
   } else {
     console.log("[Server] Serving Compiled Assets (Production Mode)");
@@ -283,7 +293,7 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
+  server.listen(PORT, "0.0.0.0", () => {
     console.log(`[Server] YFlix service available at http://0.0.0.0:${PORT}`);
   });
 }
