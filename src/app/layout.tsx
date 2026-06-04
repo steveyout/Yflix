@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import React from "react";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "../index.css";
 
 export const metadata: Metadata = {
@@ -71,20 +72,10 @@ export default function RootLayout({
             `
           }}
         />
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-036WVR6DSV"></script>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-036WVR6DSV');
-            `
-          }}
-        />
       </head>
       <body className="antialiased">
         {children}
+        <GoogleAnalytics gaId="G-036WVR6DSV" />
         <script id="aclib" type="text/javascript" src="//acscdn.com/script/aclib.js" async></script>
         <script
           dangerouslySetInnerHTML={{
