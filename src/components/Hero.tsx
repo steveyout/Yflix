@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Play, Plus, Check, Star, ChevronLeft, ChevronRight, Info } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { MovieOrTV } from "../types/movie";
+import { useImageAverageColor } from "../hooks/useImageAverageColor";
 
 interface HeroProps {
   items: MovieOrTV[];
@@ -38,6 +39,10 @@ export default function Hero({ items, onPlay, onSelect, watchlistIds, toggleWatc
     ? `https://image.tmdb.org/t/p/original${currentItem.backdrop_path}`
     : "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&q=80&w=1600";
 
+  const posterUrl = currentItem.poster_path
+    ? `https://image.tmdb.org/t/p/w500${currentItem.poster_path}`
+    : "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&q=80&w=500";
+
   const handleNext = () => {
     setIndex((prevIndex) => (prevIndex + 1) % items.length);
   };
@@ -54,6 +59,9 @@ export default function Hero({ items, onPlay, onSelect, watchlistIds, toggleWatc
     : "N/A";
 
   const ratingPercentage = Math.round(currentItem.vote_average * 10);
+
+  // Use dynamic average color extraction
+  const averageColor = useImageAverageColor(posterUrl, currentItem.title || currentItem.name || "");
 
   return (
     <div className="relative h-[560px] md:h-[620px] w-full overflow-hidden bg-black">
@@ -76,19 +84,41 @@ export default function Hero({ items, onPlay, onSelect, watchlistIds, toggleWatc
       <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-tr from-red-950/20 via-transparent to-transparent opacity-60" />
 
+      {/* Ambient Radial Backdrop Glow reflecting average details color */}
+      <div
+        className="absolute -left-16 -bottom-16 w-[450px] sm:w-[600px] h-[450px] sm:h-[600px] rounded-full blur-[140px] opacity-[0.25] pointer-events-none transition-all duration-1000 mix-blend-screen"
+        style={{ backgroundColor: averageColor }}
+      />
+
       {/* Content layout on top of gradient */}
       <div className="absolute inset-0 flex items-end px-4 py-8 sm:px-6 md:px-12 md:py-16">
         <div className="mx-auto w-full max-w-7xl relative">
           
-          {/* TMDB Rating badge on high right inside container for desktop spacing constraint */}
-          <div className="absolute right-0 bottom-40 hidden lg:flex flex-col space-y-4">
-            <div className="bg-black/60 backdrop-blur-md p-4 rounded-xl border border-white/10 flex items-center space-x-4 shadow-2xl">
-              <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center font-black text-xl text-white">
+          {/* TMDB Rating badge & Featured Poster on high right inside container for desktop spacing constraint */}
+          <div className="absolute right-0 bottom-24 hidden lg:flex flex-col items-center gap-5">
+            <div className="relative w-40 aspect-[2/3] rounded-2xl group select-none">
+              {/* Dynamic Poster Glow */}
+              <div 
+                className="absolute -inset-3.5 rounded-2xl opacity-45 blur-[28px] transition-all duration-1000 pointer-events-none"
+                style={{ backgroundColor: averageColor }}
+              />
+              <div className="relative w-full h-full rounded-2xl overflow-hidden border border-white/15 bg-zinc-900 shadow-2xl">
+                <img 
+                  src={posterUrl} 
+                  alt={currentItem.title || currentItem.name} 
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+            </div>
+
+            <div className="bg-black/75 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/10 flex items-center space-x-3.5 shadow-2xl w-40">
+              <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center font-black text-lg text-white shrink-0 shadow">
                 {currentItem.vote_average.toFixed(1)}
               </div>
-              <div>
-                <div className="text-[10px] text-white/40 uppercase tracking-widest font-bold">TMDB Rating</div>
-                <div className="text-xs font-bold text-white/95">{currentItem.vote_count || 328} Votes</div>
+              <div className="truncate">
+                <div className="text-[9px] text-white/40 uppercase tracking-widest font-black">TMDB Rating</div>
+                <div className="text-xs font-bold text-white/95">{currentItem.vote_count || 120} Votes</div>
               </div>
             </div>
           </div>
@@ -100,7 +130,7 @@ export default function Hero({ items, onPlay, onSelect, watchlistIds, toggleWatc
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -25, opacity: 0 }}
               transition={{ duration: 0.4 }}
-              className="max-w-2xl space-y-4"
+              className="max-w-2xl space-y-4 lg:pr-8"
             >
               {/* Featured on yflix & badge indicator */}
               <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-red-500 mb-1 tracking-widest uppercase">
