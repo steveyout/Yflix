@@ -12,15 +12,12 @@ export default defineConfig(() => {
       },
     },
     server: {
-      // 1. Force Vite to look for the HMR websocket on the current host port
-      // or specify the client port if you run Vite on a separate port (e.g., 5173)
+      // HMR is disabled in AI Studio via DISABLE_HMR env var.
       hmr: process.env.DISABLE_HMR === 'true'
           ? false
           : {
-            // If you are accessing via https://yflix.online, use 'wss'
-            protocol: 'ws',
-            // Ensures Vite connects back to the current domain in the browser
-            host: typeof window !== 'undefined' ? window.location.hostname : undefined,
+            // Force the HMR client to connect using the active port of your custom server
+            clientPort: process.env.PORT ? parseInt(process.env.PORT) : 3000,
           },
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
