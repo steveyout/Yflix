@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Search, Film, Tv, Library, History, RefreshCw, AlertCircle } from "lucide-react";
 import { motion } from "motion/react";
+import YflixLogo from "./YflixLogo";
 
 interface HeaderProps {
   activeTab: "home" | "movie" | "tv" | "watchlist" | "history";
@@ -40,9 +41,7 @@ export default function Header({
             onClick={() => { setActiveTab("home"); setSearchQuery(""); }} 
             className="group flex items-center gap-2.5 transition-transform duration-200 hover:scale-[1.02]"
           >
-            <div className="w-8 h-8 bg-gradient-to-tr from-red-700 to-red-500 rounded-lg flex items-center justify-center font-black text-xl tracking-tighter text-white">
-              Y
-            </div>
+            <YflixLogo size={34} />
             <span className="text-2xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-400">
               yflix
             </span>

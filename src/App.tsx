@@ -9,6 +9,7 @@ import PlayerView from "./components/PlayerView";
 import AdBanner from "./components/AdBanner";
 import { SkeletonHero, SkeletonRow, SkeletonGrid } from "./components/Skeletons";
 import { MovieOrTV, Season } from "./types/movie";
+import { getEmbedUrl } from "./config/providers";
 import api from "./api";
 
 export default function App() {
@@ -20,6 +21,8 @@ export default function App() {
   const [loadingInitial, setLoadingInitial] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [hoveredHistoryId, setHoveredHistoryId] = useState<number | null>(null);
+  const [miniPlayerHistoryId, setMiniPlayerHistoryId] = useState<number | null>(null);
 
   // Home Lists State
   const [trending, setTrending] = useState<MovieOrTV[]>([]);
@@ -759,82 +762,159 @@ export default function App() {
                     </p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-white/5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {playbackHistory.map((itemObj) => {
                       const record = itemObj.item;
                       const hasDetails = itemObj.season !== undefined && itemObj.episode !== undefined;
                       const backdrop = record.backdrop_path
-                        ? `https://image.tmdb.org/t/p/w300${record.backdrop_path}`
+                        ? `https://image.tmdb.org/t/p/w500${record.backdrop_path}`
                         : record.poster_path
-                        ? `https://image.tmdb.org/t/p/w300${record.poster_path}`
-                        : "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&q=80&w=300";
+                        ? `https://image.tmdb.org/t/p/w200${record.poster_path}`
+                        : "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&q=80&w=500";
+
+                      const isHovered = hoveredHistoryId === record.id;
+                      const isMiniPlaying = miniPlayerHistoryId === record.id;
+                      const mediaType = record.media_type || (record.first_air_date ? "tv" : "movie");
+                      
+                      // Resolve Video Link for custom inline playing
+                      const miniEmbedUrl = getEmbedUrl(
+                        "videasy",
+                        mediaType as "movie" | "tv",
+                        record.id,
+                        itemObj.season || 1,
+                        itemObj.episode || 1
+                      );
 
                       return (
                         <div
                           key={record.id}
-                          className="flex flex-col sm:flex-row sm:items-center gap-4 py-4"
+                          className="relative flex flex-col bg-[#111111] border border-white/5 rounded-2xl overflow-hidden group transition-all duration-300 hover:border-red-650 hover:shadow-2xl hover:shadow-red-950/20"
+                          onMouseEnter={() => setHoveredHistoryId(record.id)}
+                          onMouseLeave={() => {
+                            setHoveredHistoryId(null);
+                            setMiniPlayerHistoryId(null);
+                          }}
                         >
-                          {/* Banner backdrop preview */}
-                          <div className="relative w-full sm:w-36 aspect-video bg-white/5 border border-white/10 rounded-xl overflow-hidden pointer-events-none group">
-                            <img
-                              src={backdrop}
-                              alt={record.title || record.name}
-                              className="h-full w-full object-cover opacity-60"
-                              referrerPolicy="no-referrer"
-                            />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <Eye className="h-5 w-5 text-red-500 animate-pulse" />
-                            </div>
-                          </div>
+                          {/* Banner video element viewport */}
+                          <div className="relative aspect-video w-full bg-[#050505] overflow-hidden">
+                            {isMiniPlaying ? (
+                              <iframe
+                                src={miniEmbedUrl}
+                                title={`Mini Playback - ${record.title || record.name}`}
+                                className="w-full h-full border-none"
+                                allowFullScreen
+                                allow="autoplay; encrypted-media"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <>
+                                <img
+                                  src={backdrop}
+                                  alt={record.title || record.name}
+                                  className="h-full w-full object-cover opacity-75 group-hover:opacity-95 group-hover:scale-[1.03] transition-all duration-300"
+                                  loading="lazy"
+                                  referrerPolicy="no-referrer"
+                                />
 
-                          {/* Historical context description */}
-                          <div className="flex-1 space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="rounded bg-red-600/20 border border-red-600/30 px-1.5 py-0.5 text-[9px] font-bold text-red-500 uppercase">
-                                {record.media_type === "tv" ? "TV Series" : "Movie"}
-                              </span>
-                              <span className="text-[10px] text-white/40 font-semibold uppercase">
-                                Streamed: {itemObj.watchedAt}
-                              </span>
-                            </div>
+                                {/* Custom hovering interactive trigger card overlay */}
+                                <div className="absolute inset-0 bg-black/50 flex flex-col justify-between p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                  {/* Top Actions layout */}
+                                  <div className="flex justify-between items-start">
+                                    <span className="rounded bg-black/60 backdrop-blur-md px-2 py-0.5 text-[9px] font-black uppercase text-red-500 tracking-wider">
+                                      {mediaType === "tv" ? "TV Series" : "Movie"}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        removeHistoryItem(record.id);
+                                      }}
+                                      className="flex h-7 w-7 items-center justify-center rounded-full bg-black/60 hover:bg-red-650 border border-white/10 text-white/80 transition-all cursor-pointer"
+                                      title="Delete Log Record"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                  </div>
 
-                            <h3 className="text-base font-bold text-white">
-                              {record.title || record.name}
-                            </h3>
+                                  {/* Trigger overlay buttons in center */}
+                                  <div className="flex justify-center items-center gap-3">
+                                    <button
+                                      type="button"
+                                      onClick={() => handlePlayMedia(record)}
+                                      className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-black hover:bg-red-500 hover:text-white transform scale-90 group-hover:scale-100 transition-all duration-200 shadow-xl cursor-pointer"
+                                      title="Resume Fullscreen"
+                                    >
+                                      <Play className="h-4.5 w-4.5 fill-current ml-0.5" />
+                                    </button>
+                                  </div>
 
-                            {hasDetails && (
-                              <p className="text-xs font-bold text-white/70">
-                                Latest scene:{" "}
-                                <span className="text-red-500 font-extrabold pb-0.5">
-                                  Season {itemObj.season}, Episode {itemObj.episode}
-                                </span>
-                              </p>
+                                  {/* Hover indicator metadata at base */}
+                                  <div className="text-[10px] text-white/50 bg-black/40 backdrop-blur-sm self-start px-2 py-0.5 rounded">
+                                    Hovering Preview Active
+                                  </div>
+                                </div>
+                              </>
                             )}
-
-                            <p className="text-xs text-white/40 leading-relaxed line-clamp-1 max-w-xl">
-                              {record.overview || "This historical logging segment lacks description strings."}
-                            </p>
                           </div>
 
-                          {/* Controls buttons */}
-                          <div className="flex items-center gap-2 self-start sm:self-center">
-                            <button
-                              type="button"
-                              onClick={() => handlePlayMedia(record)}
-                              className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-white hover:bg-white/90 text-black px-4 py-2 text-xs font-black uppercase transition-all shadow-md"
-                            >
-                              <Play className="h-3.5 w-3.5 fill-current" />
-                              <span>RESUME</span>
-                            </button>
+                          {/* Metadata Description section */}
+                          <div className="p-4 flex-1 flex flex-col justify-between gap-3">
+                            <div className="space-y-1">
+                              {/* Streemed temporal info */}
+                              <p className="flex items-center gap-1.5 text-[10px] text-white/40 font-bold uppercase tracking-wider">
+                                <History className="h-3 w-3 text-red-500" />
+                                <span>Streamed: {itemObj.watchedAt}</span>
+                              </p>
 
-                            <button
-                              type="button"
-                              onClick={() => removeHistoryItem(record.id)}
-                              title="Delete log record"
-                              className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/40 hover:text-red-500 hover:border-white/20 transition-all cursor-pointer"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
+                              <h3 className="text-sm font-bold text-white transition-colors group-hover:text-red-500 truncate filter drop-shadow">
+                                {record.title || record.name}
+                              </h3>
+
+                              {hasDetails && (
+                                <p className="text-[11px] font-extrabold text-red-500 flex items-center gap-1">
+                                  <span>🚀 Last Played Segment:</span>
+                                  <span className="rounded bg-red-600/10 border border-red-600/20 px-1.5 py-0.25 font-black">
+                                    S{itemObj.season} &bull; EP{itemObj.episode}
+                                  </span>
+                                </p>
+                              )}
+
+                              <p className="text-xs text-white/40 line-clamp-2 leading-relaxed">
+                                {record.overview || "This historical catalog entry lacks descriptive string parameters."}
+                              </p>
+                            </div>
+
+                            {/* Base Control triggers of history action item */}
+                            <div className="pt-3 border-t border-white/5 flex items-center justify-between gap-2.5">
+                              {isMiniPlaying ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setMiniPlayerHistoryId(null)}
+                                  className="flex-1 cursor-pointer inline-flex items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-black uppercase text-white hover:bg-white/10 transition-all"
+                                >
+                                  <span>Stop Quick Player</span>
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setMiniPlayerHistoryId(record.id)}
+                                  className="flex-1 cursor-pointer inline-flex items-center justify-center gap-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white px-2.5 py-1.5 text-xs font-black uppercase transition-all shadow-md"
+                                >
+                                  <Eye className="h-3.5 w-3.5" />
+                                  <span>Quick Resume</span>
+                                </button>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => handlePlayMedia(record)}
+                                className="cursor-pointer inline-flex items-center justify-center gap-1 rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-black uppercase text-white hover:bg-white/20 transition-all"
+                                title="Open Full Screen Player"
+                              >
+                                <Play className="h-3 w-3 fill-current" />
+                                <span className="hidden sm:inline">FULL</span>
+                              </button>
+                            </div>
                           </div>
                         </div>
                       );
