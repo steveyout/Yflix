@@ -141,6 +141,40 @@ export default function App() {
     fetchMovieCatalog();
   }, []);
 
+  // 3. Deep link handler for shared item links (?media=movie&id=123)
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    const mediaParam = queryParams.get("media");
+    const idParam = queryParams.get("id");
+
+    if (mediaParam && idParam) {
+      const parsedId = parseInt(idParam, 10);
+      if (!isNaN(parsedId)) {
+        api.getDetails(mediaParam, parsedId)
+          .then((aggregated) => {
+            if (aggregated && aggregated.details) {
+              const info = aggregated.details;
+              setSelectedMedia({
+                id: info.id,
+                title: info.title,
+                name: info.name,
+                overview: info.overview,
+                poster_path: info.poster_path,
+                backdrop_path: info.backdrop_path,
+                vote_average: info.vote_average,
+                vote_count: 100,
+                popularity: 100,
+                media_type: mediaParam as "movie" | "tv",
+              });
+            }
+          })
+          .catch((err) => {
+            console.error("Failed to load deep linked details:", err);
+          });
+      }
+    }
+  }, []);
+
   // Discover movies by genre
   useEffect(() => {
     if (selectedGenreId) {

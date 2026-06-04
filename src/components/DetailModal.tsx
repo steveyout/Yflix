@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Play, Plus, Check, Star, Clock, Calendar, Film, Bookmark, Users, Sparkles, Youtube } from "lucide-react";
+import { X, Play, Plus, Check, Star, Clock, Calendar, Film, Bookmark, Users, Sparkles, Youtube, Share2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { MovieOrTV, DetailsAggregated, MovieDetail, CastMember } from "../types/movie";
 import AdBanner from "./AdBanner";
@@ -25,6 +25,46 @@ export default function DetailModal({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<MovieOrTV>(item);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const isBookmarked = watchlistIds.includes(selectedItem.id);
+  const mediaType = selectedItem.media_type || (selectedItem.first_air_date ? "tv" : "movie");
+
+  const handleShare = () => {
+    const shareUrl = `${window.location.protocol}//${window.location.host}?media=${mediaType}&id=${selectedItem.id}`;
+    
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(shareUrl)
+        .then(() => {
+          setToastMessage("Copied!");
+          setTimeout(() => setToastMessage(null), 2000);
+        })
+        .catch(() => {
+          fallbackCopy(shareUrl);
+        });
+    } else {
+      fallbackCopy(shareUrl);
+    }
+  };
+
+  const fallbackCopy = (text: string) => {
+    try {
+      const el = document.createElement("textarea");
+      el.value = text;
+      el.style.position = "absolute";
+      el.style.left = "-9999px";
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+      setToastMessage("Copied!");
+      setTimeout(() => setToastMessage(null), 2000);
+    } catch (err) {
+      console.error("Fallback copy failed", err);
+      setToastMessage("Please copy page URL manually!");
+      setTimeout(() => setToastMessage(null), 3000);
+    }
+  };
 
   // Re-fetch when selected item changes (e.g. from recommendations)
   useEffect(() => {
@@ -52,9 +92,6 @@ export default function DetailModal({
     const inferredType = newItem.media_type || (newItem.first_air_date ? "tv" : "movie");
     setSelectedItem({ ...newItem, media_type: inferredType });
   };
-
-  const isBookmarked = watchlistIds.includes(selectedItem.id);
-  const mediaType = selectedItem.media_type || (selectedItem.first_air_date ? "tv" : "movie");
 
   // Filter YouTube trailers
   const trailerVideo = data?.videos.results.find(
@@ -245,6 +282,16 @@ export default function DetailModal({
                         </>
                       )}
                     </button>
+
+                    <button
+                      type="button"
+                      onClick={handleShare}
+                      className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 text-white/80 px-5 py-2.5 text-xs font-semibold hover:bg-white/15 hover:border-white/20 transition-all active:scale-95"
+                      title="Share movie/series link to clipboard"
+                    >
+                      <Share2 className="h-4 w-4 text-red-500" />
+                      <span>Share</span>
+                    </button>
                   </div>
                 </div>
 
@@ -373,6 +420,22 @@ export default function DetailModal({
           </div>
         )}
       </motion.div>
+
+      {/* Animated Pop-up Share Toast */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 15, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 450, damping: 25 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-2.5 rounded-xl bg-zinc-900 border border-white/10 px-5 py-3 text-sm font-black text-white shadow-2xl tracking-wide select-none"
+          >
+            <Check className="h-4 w-4 text-emerald-500 stroke-[3.5px]" />
+            <span>{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
