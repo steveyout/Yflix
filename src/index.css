@@ -23,6 +23,19 @@ body {
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
 }
 
+@keyframes skeleton-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: skeleton-shimmer 2.2s infinite linear;
+}
+
 /* Text selections coloring */
 ::selection {
   background-color: rgb(220, 38, 38);

@@ -75,7 +75,6 @@ export default function Hero({ items, onPlay, onSelect, watchlistIds, toggleWatc
           transition={{ duration: 0.8 }}
           className="absolute inset-0 h-full w-full bg-cover bg-center"
           style={{ backgroundImage: `url(${backdropUrl})` }}
-          referrerPolicy="no-referrer"
         />
       </AnimatePresence>
 
