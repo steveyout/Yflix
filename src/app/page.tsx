@@ -161,10 +161,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<any
         "@context": "https://schema.org",
         "@type": "WebSite",
         "name": "YFlix",
-        "url": "https://yflix.to",
+        "url": "https://yflix.online",
         "potentialAction": {
           "@type": "SearchAction",
-          "target": "https://yflix.to/?search={search_term_string}",
+          "target": "https://yflix.online/?search={search_term_string}",
           "query-input": "required name=search_term_string",
         },
       };
