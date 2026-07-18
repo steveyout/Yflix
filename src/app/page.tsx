@@ -63,12 +63,21 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
     }
   }
 
+  let canonicalUrl = "https://yflix.online/";
+  if (media && id) {
+    canonicalUrl = `https://yflix.online/?media=${media}&id=${id}`;
+  }
+
   return {
     title,
     description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
       title,
       description,
+      url: canonicalUrl,
       images: [{ url: imageUrl, width: 1200, height: 630, alt: title }],
       type: "video.movie",
       siteName: "YFlix",

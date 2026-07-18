@@ -2,12 +2,23 @@ import type { Metadata } from "next";
 import React from "react";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import "../index.css";
-import Script from "next/script";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://yflix.online"),
   title: "YFlix | Watch Free Movies and TV Shows Online",
   description: "YFlix offers free access to the latest movies and TV shows in high quality. Enjoy a vast library of entertainment and interact with our integrated AI chatbot.",
   keywords: ["free movies", "watch tv shows online", "streaming site", "high quality movies", "entertainment", "AI chatbot"],
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
 };
 
 export default function RootLayout({
@@ -77,56 +88,23 @@ export default function RootLayout({
       <body className="antialiased">
         {children}
         <GoogleAnalytics gaId="G-036WVR6DSV" />
-        {/* --- External Tracking Script --- */}
-        <Script
-            id="geastyetis-tracker"
-            src="//tr.geastyetis.com/rNzDumbZfCf/NaGwn"
-            strategy="beforeInteractive"
-            data-cfasync="false"
-        />
-
-        {/* --- Ad Placement 1 (728x90) --- */}
-        <Script
-            id="ad-options-1"
-            strategy="afterInteractive"
-            dangerouslySetInnerHTML={{
-                __html: `
-              window.atOptions = {
-                'key' : '45848b4da681507c529679c16f48f951',
-                'format' : 'iframe',
-                'height' : 90,
-                'width' : 728,
-                'params' : {}
-              };
-            `,
-            }}
-        />
-        <Script
-            id="ad-invoke-1"
-            src="https://directoryeditorweep.com/45848b4da681507c529679c16f48f951/invoke.js"
-            strategy="afterInteractive"
-        />
-
-        {/* --- Ad Placement 2 (300x250) --- */}
-        <Script
-            id="ad-options-2"
-            strategy="afterInteractive"
-            dangerouslySetInnerHTML={{
-                __html: `
-              window.atOptions = {
-                'key' : 'bd4d005dde28625fed7ac1ccb523a36a',
-                'format' : 'iframe',
-                'height' : 250,
-                'width' : 300,
-                'params' : {}
-              };
-            `,
-            }}
-        />
-        <Script
-            id="ad-invoke-2"
-            src="https://directoryeditorweep.com/bd4d005dde28625fed7ac1ccb523a36a/invoke.js"
-            strategy="afterInteractive"
+        <script id="aclib" type="text/javascript" src="//acscdn.com/script/aclib.js" async></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.addEventListener('DOMContentLoaded', function() {
+                if (typeof aclib !== "undefined" && aclib.runPop) {
+                  try {
+                    aclib.runPop({
+                      zoneId: '9033646',
+                    });
+                  } catch(e) {
+                    console.warn("Popunder initialization error caught:", e);
+                  }
+                }
+              });
+            `
+          }}
         />
       </body>
     </html>

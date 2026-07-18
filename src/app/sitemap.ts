@@ -48,7 +48,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const mediaType = item.media_type || (item.title ? "movie" : "tv");
       if (item.id && (mediaType === "movie" || mediaType === "tv")) {
         routes.push({
-          url: `${baseUrl}/?media=${mediaType}&amp;id=${item.id}`,
+          url: `${baseUrl}/?media=${mediaType}&id=${item.id}`,
           lastModified: new Date(),
           changeFrequency: "weekly",
           priority: 0.8,
