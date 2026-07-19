@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import React from "react";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import "../index.css";
-import Script from "next/script";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://yflix.online"),
@@ -20,6 +19,11 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -30,7 +34,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 200 200' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3ClinearGradient id='bgGrad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23ff5252' /%3E%3Cstop offset='60%25' stop-color='%23d30f0f' /%3E%3Cstop offset='100%25' stop-color='%23800202' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='0' y='0' width='200' height='200' rx='54' fill='url(%23bgGrad)' /%3E%3Cpath d='M 54,0 C 120,0 200,60 200,130 C 200,175 165,200 120,200 C 50,200 0,130 0,60 C 0,25 25,0 54,0 Z' fill='%23000000' opacity='0.15' /%3E%3Cpath d='M 54,0 C 130,10 200,80 200,140 C 200,190 140,200 80,200 C 20,180 0,110 0,60 C 0,10 20,0 54,0 Z' fill='%23ff0000' opacity='0.1' /%3E%3Cpath d='M 78,56 C 78,51.5 83,48.5 87,51 L 151,89 C 155,91.5 155,97.5 151,100 L 87,138 C 83,140.5 78,137.5 78,133 Z' fill='%23ffffff' /%3E%3Crect x='2.5' y='2.5' width='195' height='195' rx='51.5' stroke='%23ffffff' stroke-opacity='0.12' stroke-width='5' /%3E%3C/svg%3E" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="shortcut icon" href="/favicon.svg" />
+        <link rel="apple-touch-icon" href="/icon.svg" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -89,57 +95,6 @@ export default function RootLayout({
       <body className="antialiased">
         {children}
         <GoogleAnalytics gaId="G-036WVR6DSV" />
-        {/* --- External Tracking Script --- */}
-        <Script
-            id="geastyetis-tracker"
-            src="//tr.geastyetis.com/rNzDumbZfCf/NaGwn"
-            strategy="beforeInteractive"
-            data-cfasync="false"
-        />
-
-        {/* --- Ad Placement 1 (728x90) --- */}
-        <Script
-            id="ad-options-1"
-            strategy="afterInteractive"
-            dangerouslySetInnerHTML={{
-                __html: `
-              window.atOptions = {
-                'key' : '45848b4da681507c529679c16f48f951',
-                'format' : 'iframe',
-                'height' : 90,
-                'width' : 728,
-                'params' : {}
-              };
-            `,
-            }}
-        />
-        <Script
-            id="ad-invoke-1"
-            src="https://directoryeditorweep.com/45848b4da681507c529679c16f48f951/invoke.js"
-            strategy="afterInteractive"
-        />
-
-        {/* --- Ad Placement 2 (300x250) --- */}
-        <Script
-            id="ad-options-2"
-            strategy="afterInteractive"
-            dangerouslySetInnerHTML={{
-                __html: `
-              window.atOptions = {
-                'key' : 'bd4d005dde28625fed7ac1ccb523a36a',
-                'format' : 'iframe',
-                'height' : 250,
-                'width' : 300,
-                'params' : {}
-              };
-            `,
-            }}
-        />
-        <Script
-            id="ad-invoke-2"
-            src="https://directoryeditorweep.com/bd4d005dde28625fed7ac1ccb523a36a/invoke.js"
-            strategy="afterInteractive"
-        />
         <script id="aclib" type="text/javascript" src="//acscdn.com/script/aclib.js" async></script>
         <script
           dangerouslySetInnerHTML={{
