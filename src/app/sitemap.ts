@@ -29,7 +29,7 @@ async function fetchTrendingUrls() {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://yflix.online";
+  const baseUrl = "https://movy.live";
 
   // Base homepage route
   const routes: MetadataRoute.Sitemap = [

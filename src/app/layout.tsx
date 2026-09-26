@@ -5,10 +5,13 @@ import "../index.css";
 import Script from "next/script";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://yflix.online"),
-  title: "YFlix | Watch Free Movies and TV Shows Online",
-  description: "YFlix offers free access to the latest movies and TV shows in high quality. Enjoy a vast library of entertainment and interact with our integrated AI chatbot.",
-  keywords: ["free movies", "watch tv shows online", "streaming site", "high quality movies", "entertainment", "AI chatbot"],
+  metadataBase: new URL("https://movy.live"),
+  title: "Movy | Watch Free Movies and TV Shows Online",
+  description: "Movy offers free access to the latest movies and TV shows in high quality. Enjoy a vast library of entertainment with instant streaming.",
+  keywords: ["movy", "movy.live", "free movies", "watch tv shows online", "streaming site", "high quality movies", "entertainment"],
+  alternates: {
+    canonical: "https://movy.live",
+  },
   robots: {
     index: true,
     follow: true,
@@ -21,9 +24,25 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon.ico",
     apple: "/icon.svg",
+  },
+  openGraph: {
+    title: "Movy | Watch Free Movies and TV Shows Online",
+    description: "Movy offers free access to the latest movies and TV shows in high quality. Enjoy a vast library of entertainment with instant streaming.",
+    url: "https://movy.live",
+    siteName: "Movy",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Movy | Watch Free Movies and TV Shows Online",
+    description: "Movy offers free access to the latest movies and TV shows in high quality. Enjoy a vast library of entertainment with instant streaming.",
   },
 };
 
@@ -35,8 +54,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <link rel="shortcut icon" href="/favicon.svg" />
+        <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/icon.svg" />
         <script
           dangerouslySetInnerHTML={{

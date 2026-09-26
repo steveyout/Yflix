@@ -131,9 +131,9 @@ export default function Hero({ items, onPlay, onSelect, watchlistIds, toggleWatc
               transition={{ duration: 0.4 }}
               className="max-w-2xl space-y-4 lg:pr-8"
             >
-              {/* Featured on yflix & badge indicator */}
+              {/* Featured on Movy & badge indicator */}
               <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-red-500 mb-1 tracking-widest uppercase">
-                <span className="bg-red-500/10 px-2 py-1 rounded">Featured on yflix</span>
+                <span className="bg-red-500/10 px-2 py-1 rounded">Featured on Movy</span>
                 <span className="text-white/40">•</span>
                 <span className="text-white/60">Now Streaming</span>
               </div>

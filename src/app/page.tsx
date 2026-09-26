@@ -38,8 +38,8 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   const media = resolvedParams.media;
   const id = resolvedParams.id;
 
-  let title = "YFlix | Watch Free Movies and TV Shows Online";
-  let description = "YFlix offers instant access to the latest movies and TV shows in beautiful high quality. Choose from thousands of trending cinematic titles.";
+  let title = "Movy | Watch Free Movies and TV Shows Online";
+  let description = "Movy offers instant access to the latest movies and TV shows in beautiful high quality. Choose from thousands of trending cinematic titles.";
   let imageUrl = "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&q=80&w=1200";
 
   if (isConfigured() && media && id) {
@@ -48,7 +48,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
       if (detailInfo) {
         const itemTitle = detailInfo.title || detailInfo.name;
         const itemOverview = detailInfo.overview;
-        title = `${itemTitle} - Watch Free on YFlix`;
+        title = `${itemTitle} - Watch Free on Movy`;
         if (itemOverview) {
           description = itemOverview.slice(0, 160) + (itemOverview.length > 160 ? "..." : "");
         }
@@ -63,9 +63,9 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
     }
   }
 
-  let canonicalUrl = "https://yflix.online/";
+  let canonicalUrl = "https://movy.live/";
   if (media && id) {
-    canonicalUrl = `https://yflix.online/?media=${media}&id=${id}`;
+    canonicalUrl = `https://movy.live/?media=${media}&id=${id}`;
   }
 
   return {
@@ -80,7 +80,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
       url: canonicalUrl,
       images: [{ url: imageUrl, width: 1200, height: 630, alt: title }],
       type: "video.movie",
-      siteName: "YFlix",
+      siteName: "Movy",
     },
     twitter: {
       card: "summary_large_image",
@@ -169,11 +169,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<any
     : {
         "@context": "https://schema.org",
         "@type": "WebSite",
-        "name": "YFlix",
-        "url": "https://yflix.online",
+        "name": "Movy",
+        "url": "https://movy.live",
         "potentialAction": {
           "@type": "SearchAction",
-          "target": "https://yflix.online/?search={search_term_string}",
+          "target": "https://movy.live/?search={search_term_string}",
           "query-input": "required name=search_term_string",
         },
       };

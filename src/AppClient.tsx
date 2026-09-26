@@ -68,10 +68,10 @@ export default function App({
   // 1. Initial State Hydration (Watchlist & History)
   useEffect(() => {
     try {
-      const storedWatchlist = localStorage.getItem("yflix-watchlist");
+      const storedWatchlist = localStorage.getItem("movy-watchlist") || localStorage.getItem("yflix-watchlist");
       if (storedWatchlist) setWatchlist(JSON.parse(storedWatchlist));
 
-      const storedHistory = localStorage.getItem("yflix-history");
+      const storedHistory = localStorage.getItem("movy-history") || localStorage.getItem("yflix-history");
       if (storedHistory) setPlaybackHistory(JSON.parse(storedHistory));
     } catch (e) {
       console.error("Localstorage recovery failed:", e);
@@ -245,7 +245,7 @@ export default function App({
       updated.unshift(item);
     }
     setWatchlist(updated);
-    localStorage.setItem("yflix-watchlist", JSON.stringify(updated));
+    localStorage.setItem("movy-watchlist", JSON.stringify(updated));
   };
 
   // Launch Stream/Player view from click
@@ -286,17 +286,18 @@ export default function App({
     });
 
     setPlaybackHistory(updated);
-    localStorage.setItem("yflix-history", JSON.stringify(updated));
+    localStorage.setItem("movy-history", JSON.stringify(updated));
   };
 
   const removeHistoryItem = (itemId: number) => {
     const updated = playbackHistory.filter((x) => x.item.id !== itemId);
     setPlaybackHistory(updated);
-    localStorage.setItem("yflix-history", JSON.stringify(updated));
+    localStorage.setItem("movy-history", JSON.stringify(updated));
   };
 
   const clearAllHistory = () => {
     setPlaybackHistory([]);
+    localStorage.removeItem("movy-history");
     localStorage.removeItem("yflix-history");
   };
 
@@ -999,7 +1000,7 @@ export default function App({
           </div>
         </div>
         <div className="text-white/30 font-black">
-          © 2026 YFLIX CLONE &bull; ALL RIGHTS DIRECTED
+          © 2026 MOVY &bull; ALL RIGHTS RESERVED
         </div>
       </footer>
 

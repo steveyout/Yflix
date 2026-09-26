@@ -9,56 +9,74 @@ export interface Provider {
 
 export const providers: Provider[] = [
   {
+    id: 'cinemaos',
+    name: 'Server 1 (CinemaOS)',
+    baseUrl: 'https://cinemaos.tech',
+    enabled: true,
+  },
+  {
+    id: 'vidking',
+    name: 'Server 2 (VidKing Premium)',
+    baseUrl: 'https://www.vidking.net',
+    enabled: true,
+  },
+  {
     id: 'vidlink',
-    name: 'Server 1 (VidLink Pro)',
+    name: 'Server 3 (VidLink Pro)',
     baseUrl: 'https://vidlink.pro',
     enabled: true,
   },
   {
     id: 'vidsrc_to',
-    name: 'Server 2 (VIP)',
+    name: 'Server 4 (VIP)',
     baseUrl: 'https://vidsrc.to/embed',
     enabled: true,
   },
   {
     id: 'vidnest',
-    name: 'Server 3 (VidNest)',
+    name: 'Server 5 (VidNest)',
     baseUrl: 'https://vidnest.fun',
     enabled: true,
   },
   {
     id: 'vidfast',
-    name: 'Server 3 (VidFast)',
+    name: 'Server 6 (VidFast)',
     baseUrl: 'https://vidfast.net',
     enabled: true,
   },
   {
     id: 'videasy',
-    name: 'Server 3 (VidEasy)',
+    name: 'Server 7 (VidEasy)',
     baseUrl: 'https://player.videasy.net',
     enabled: true,
   },
   {
     id: 'vidsrc_me',
-    name: 'Server 4 (Vidsrc)',
+    name: 'Server 8 (Vidsrc Me)',
     baseUrl: 'https://vsembed.ru/embed',
     enabled: true,
   },
   {
     id: 'vidup',
-    name: 'Server 5 (Vidup)',
+    name: 'Server 9 (Vidup)',
     baseUrl: 'https://vidup.to',
     enabled: true,
   },
   {
     id: 'rivestream',
-    name: 'Server 6 (Rive)',
+    name: 'Server 10 (Rive)',
     baseUrl: 'https://rivestream.org/embed',
+    enabled: true,
+  },
+  {
+    id: 'vidcore',
+    name: 'Server 11 (VidCore)',
+    baseUrl: 'https://vidcore.org',
     enabled: true,
   },
 ];
 
-export const DEFAULT_PROVIDER_ID = 'videasy';
+export const DEFAULT_PROVIDER_ID = 'cinemaos';
 
 /**
  * Helper to build the URL based on media type
@@ -69,14 +87,47 @@ export const getEmbedUrl = (
   type: 'movie' | 'tv',
   tmdbId: string | number,
   season: number = 1,
-  episode: number = 1
+  episode: number = 1,
+  progressSeconds: number = 0
 ): string => {
   const selected = providers.find((p) => p.id === providerId);
   if (!selected) return '';
 
+  if (selected.id === 'cinemaos') {
+    return type === 'movie'
+      ? `${selected.baseUrl}/player/${tmdbId}`
+      : `${selected.baseUrl}/player/${tmdbId}/${season}/${episode}`;
+  }
+
+  if (selected.id === 'vidking') {
+    let url = "";
+    if (type === 'movie') {
+      url = `${selected.baseUrl}/embed/movie/${tmdbId}?color=e50914`;
+    } else {
+      url = `${selected.baseUrl}/embed/tv/${tmdbId}/${season}/${episode}?color=e50914&nextEpisode=true&episodeSelector=true`;
+    }
+    if (progressSeconds > 0) {
+      url += `&progress=${progressSeconds}`;
+    }
+    return url;
+  }
+
+  if (selected.id === 'vidcore') {
+    return type === 'movie'
+      ? `${selected.baseUrl}/embed/movie/${tmdbId}`
+      : `${selected.baseUrl}/embed/tv/${tmdbId}/${season}/${episode}`;
+  }
+
+  // Fallbacks for other servers
   if (type === 'movie') {
+    if (selected.id === 'vidlink') {
+      return `${selected.baseUrl}/movie/${tmdbId}`;
+    }
     return `${selected.baseUrl}/movie/${tmdbId}`;
   }
-  // For TV shows, we append season and episode
+  // For TV shows
+  if (selected.id === 'vidlink') {
+    return `${selected.baseUrl}/tv/${tmdbId}/${season}/${episode}`;
+  }
   return `${selected.baseUrl}/tv/${tmdbId}/${season}/${episode}`;
 };
