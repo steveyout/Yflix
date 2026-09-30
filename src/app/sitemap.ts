@@ -29,17 +29,19 @@ async function fetchTrendingUrls() {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://movy.live";
+  const baseUrls = ["https://yflix.online", "https://movy.live"];
 
-  // Base homepage route
-  const routes: MetadataRoute.Sitemap = [
-    {
+  const routes: MetadataRoute.Sitemap = [];
+
+  // Base homepage routes
+  baseUrls.forEach((baseUrl) => {
+    routes.push({
       url: baseUrl,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 1.0,
-    },
-  ];
+    });
+  });
 
   // Append popular trending movie/TV detail views so they get indexed as crawl paths
   if (isConfigured()) {
@@ -47,11 +49,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     items.forEach((item: any) => {
       const mediaType = item.media_type || (item.title ? "movie" : "tv");
       if (item.id && (mediaType === "movie" || mediaType === "tv")) {
-        routes.push({
-          url: `${baseUrl}/?media=${mediaType}&id=${item.id}`,
-          lastModified: new Date(),
-          changeFrequency: "weekly",
-          priority: 0.8,
+        baseUrls.forEach((baseUrl) => {
+          routes.push({
+            url: `${baseUrl}/?media=${mediaType}&id=${item.id}`,
+            lastModified: new Date(),
+            changeFrequency: "weekly",
+            priority: 0.8,
+          });
         });
       }
     });

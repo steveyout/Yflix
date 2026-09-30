@@ -1,5 +1,7 @@
 import React from "react";
 import AppClient from "../AppClient";
+import { headers } from "next/headers";
+import { getSiteConfig } from "../lib/siteConfig";
 
 const TMDB_ACCESS_TOKEN = process.env.TMDB_ACCESS_TOKEN;
 const TMDB_BASE_URL = process.env.TMDB_BASE_URL || "https://api.themoviedb.org/3";
@@ -35,11 +37,22 @@ async function fetchFromTMDB(endpoint: string, params: Record<string, string> = 
 // 1. Dynamic Server-Side SEO Generation (generateMetadata)
 export async function generateMetadata({ searchParams }: { searchParams: Promise<any> }) {
   const resolvedParams = await searchParams;
-  const media = resolvedParams.media;
-  const id = resolvedParams.id;
+  const media = resolvedParams?.media;
+  const id = resolvedParams?.id;
+  const domainParam = resolvedParams?.domain;
 
-  let title = "Movy | Watch Free Movies and TV Shows Online";
-  let description = "Movy offers instant access to the latest movies and TV shows in beautiful high quality. Choose from thousands of trending cinematic titles.";
+  let host = "";
+  try {
+    const headerList = await headers();
+    host = headerList.get("x-forwarded-host") || headerList.get("host") || "";
+  } catch {
+    // fallback
+  }
+
+  const site = getSiteConfig(host, domainParam);
+
+  let title = site.title;
+  let description = site.description;
   let imageUrl = "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&q=80&w=1200";
 
   if (isConfigured() && media && id) {
@@ -48,7 +61,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
       if (detailInfo) {
         const itemTitle = detailInfo.title || detailInfo.name;
         const itemOverview = detailInfo.overview;
-        title = `${itemTitle} - Watch Free on Movy`;
+        title = `${itemTitle} - Watch Free on ${site.brandName}`;
         if (itemOverview) {
           description = itemOverview.slice(0, 160) + (itemOverview.length > 160 ? "..." : "");
         }
@@ -63,14 +76,16 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
     }
   }
 
-  let canonicalUrl = "https://movy.live/";
+  let canonicalUrl = `${site.domain}/`;
   if (media && id) {
-    canonicalUrl = `https://movy.live/?media=${media}&id=${id}`;
+    canonicalUrl = `${site.domain}/?media=${media}&id=${id}`;
   }
 
   return {
+    metadataBase: new URL(site.domain),
     title,
     description,
+    keywords: site.keywords,
     alternates: {
       canonical: canonicalUrl,
     },
@@ -80,7 +95,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
       url: canonicalUrl,
       images: [{ url: imageUrl, width: 1200, height: 630, alt: title }],
       type: "video.movie",
-      siteName: "Movy",
+      siteName: site.brandName,
     },
     twitter: {
       card: "summary_large_image",
@@ -94,8 +109,19 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
 // 2. Dynamic Server-Side Component (Page)
 export default async function Page({ searchParams }: { searchParams: Promise<any> }) {
   const resolvedParams = await searchParams;
-  const media = resolvedParams.media;
-  const id = resolvedParams.id;
+  const media = resolvedParams?.media;
+  const id = resolvedParams?.id;
+  const domainParam = resolvedParams?.domain;
+
+  let host = "";
+  try {
+    const headerList = await headers();
+    host = headerList.get("x-forwarded-host") || headerList.get("host") || "";
+  } catch {
+    // fallback
+  }
+
+  const site = getSiteConfig(host, domainParam);
 
   let trending: any[] = [];
   let popularMovies: any[] = [];
@@ -169,11 +195,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<any
     : {
         "@context": "https://schema.org",
         "@type": "WebSite",
-        "name": "Movy",
-        "url": "https://movy.live",
+        "name": site.brandName,
+        "url": site.domain,
         "potentialAction": {
           "@type": "SearchAction",
-          "target": "https://movy.live/?search={search_term_string}",
+          "target": `${site.domain}/?search={search_term_string}`,
           "query-input": "required name=search_term_string",
         },
       };
@@ -193,6 +219,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<any
         initialTopRated={topRated}
         initialConfigStatus={configStatus}
         initialGenres={genres}
+        initialSiteConfig={site}
       />
     </>
   );

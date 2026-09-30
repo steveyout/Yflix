@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Search, Film, Tv, Library, History, RefreshCw, AlertCircle } from "lucide-react";
 import { motion } from "motion/react";
 import MovyLogo from "./MovyLogo";
+import { SiteConfig } from "../lib/siteConfig";
 
 interface HeaderProps {
   activeTab: "home" | "movie" | "tv" | "watchlist" | "history";
@@ -10,6 +11,7 @@ interface HeaderProps {
   setSearchQuery: (query: string) => void;
   configStatus: { configured: boolean; baseUrl: string } | null;
   onRefresh: () => void;
+  siteConfig?: SiteConfig;
 }
 
 export default function Header({
@@ -19,6 +21,7 @@ export default function Header({
   setSearchQuery,
   configStatus,
   onRefresh,
+  siteConfig,
 }: HeaderProps) {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -43,7 +46,7 @@ export default function Header({
           >
             <MovyLogo size={34} />
             <span className="text-2xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-400">
-              Movy
+              {siteConfig?.brandName || "Movy"}
             </span>
           </button>
         </div>

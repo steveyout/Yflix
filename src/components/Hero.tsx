@@ -3,6 +3,7 @@ import { Play, Plus, Check, Star, ChevronLeft, ChevronRight, Info } from "lucide
 import { motion, AnimatePresence } from "motion/react";
 import { MovieOrTV } from "../types/movie";
 import { useImageAverageColor } from "../hooks/useImageAverageColor";
+import { SiteConfig } from "../lib/siteConfig";
 
 interface HeroProps {
   items: MovieOrTV[];
@@ -10,9 +11,10 @@ interface HeroProps {
   onSelect: (item: MovieOrTV) => void;
   watchlistIds: number[];
   toggleWatchlist: (item: MovieOrTV) => void;
+  siteConfig?: SiteConfig;
 }
 
-export default function Hero({ items, onPlay, onSelect, watchlistIds, toggleWatchlist }: HeroProps) {
+export default function Hero({ items, onPlay, onSelect, watchlistIds, toggleWatchlist, siteConfig }: HeroProps) {
   const [index, setIndex] = useState(0);
 
   // Auto cycle every 9 seconds
@@ -131,9 +133,9 @@ export default function Hero({ items, onPlay, onSelect, watchlistIds, toggleWatc
               transition={{ duration: 0.4 }}
               className="max-w-2xl space-y-4 lg:pr-8"
             >
-              {/* Featured on Movy & badge indicator */}
+              {/* Featured on Brand & badge indicator */}
               <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-red-500 mb-1 tracking-widest uppercase">
-                <span className="bg-red-500/10 px-2 py-1 rounded">Featured on Movy</span>
+                <span className="bg-red-500/10 px-2 py-1 rounded">{siteConfig?.heroBadge || "Featured on Movy"}</span>
                 <span className="text-white/40">•</span>
                 <span className="text-white/60">Now Streaming</span>
               </div>

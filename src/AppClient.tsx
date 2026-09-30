@@ -13,6 +13,7 @@ import { SkeletonHero, SkeletonRow, SkeletonGrid } from "./components/Skeletons"
 import { MovieOrTV, Season } from "./types/movie";
 import { getEmbedUrl } from "./config/providers";
 import api from "./api";
+import { SiteConfig, getSiteConfig } from "./lib/siteConfig";
 
 interface AppClientProps {
   initialTrending?: MovieOrTV[];
@@ -21,6 +22,7 @@ interface AppClientProps {
   initialTopRated?: MovieOrTV[];
   initialConfigStatus?: { configured: boolean; baseUrl: string };
   initialGenres?: { id: number; name: string }[];
+  initialSiteConfig?: SiteConfig;
 }
 
 export default function App({
@@ -30,7 +32,9 @@ export default function App({
   initialTopRated = [],
   initialConfigStatus = null as any,
   initialGenres = [],
+  initialSiteConfig,
 }: AppClientProps) {
+  const [siteConfig, setSiteConfig] = useState<SiteConfig>(() => initialSiteConfig || getSiteConfig());
   const [activeTab, setActiveTab] = useState<"home" | "movie" | "tv" | "watchlist" | "history">("home");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<MovieOrTV[]>([]);
@@ -65,7 +69,16 @@ export default function App({
     { item: MovieOrTV; watchedAt: string; season?: number; episode?: number }[]
   >([]);
 
-  // 1. Initial State Hydration (Watchlist & History)
+  // 1. Initial State Hydration (Watchlist, History & Domain Detection)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const domainParam = urlParams.get("domain");
+      const detected = getSiteConfig(window.location.hostname, domainParam);
+      setSiteConfig(detected);
+    }
+  }, []);
+
   useEffect(() => {
     try {
       const storedWatchlist = localStorage.getItem("movy-watchlist") || localStorage.getItem("yflix-watchlist");
@@ -246,6 +259,7 @@ export default function App({
     }
     setWatchlist(updated);
     localStorage.setItem("movy-watchlist", JSON.stringify(updated));
+    localStorage.setItem("yflix-watchlist", JSON.stringify(updated));
   };
 
   // Launch Stream/Player view from click
@@ -287,12 +301,14 @@ export default function App({
 
     setPlaybackHistory(updated);
     localStorage.setItem("movy-history", JSON.stringify(updated));
+    localStorage.setItem("yflix-history", JSON.stringify(updated));
   };
 
   const removeHistoryItem = (itemId: number) => {
     const updated = playbackHistory.filter((x) => x.item.id !== itemId);
     setPlaybackHistory(updated);
     localStorage.setItem("movy-history", JSON.stringify(updated));
+    localStorage.setItem("yflix-history", JSON.stringify(updated));
   };
 
   const clearAllHistory = () => {
@@ -333,6 +349,7 @@ export default function App({
         setSearchQuery={setSearchQuery}
         configStatus={configStatus}
         onRefresh={() => window.location.reload()}
+        siteConfig={siteConfig}
       />
 
       {/* Main body viewport */}
@@ -430,6 +447,7 @@ export default function App({
                     onSelect={setSelectedMedia}
                     watchlistIds={watchlistIds}
                     toggleWatchlist={toggleWatchlist}
+                    siteConfig={siteConfig}
                   />
 
                   {/* Genres Quick Filter Slider */}
@@ -1000,7 +1018,7 @@ export default function App({
           </div>
         </div>
         <div className="text-white/30 font-black">
-          © 2026 MOVY &bull; ALL RIGHTS RESERVED
+          © 2026 {siteConfig.brandUpper} &bull; ALL RIGHTS RESERVED
         </div>
       </footer>
 

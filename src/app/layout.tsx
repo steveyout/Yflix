@@ -3,48 +3,62 @@ import React from "react";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import "../index.css";
 import Script from "next/script";
+import { headers } from "next/headers";
+import { getSiteConfig } from "../lib/siteConfig";
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://movy.live"),
-  title: "Movy | Watch Free Movies and TV Shows Online",
-  description: "Movy offers free access to the latest movies and TV shows in high quality. Enjoy a vast library of entertainment with instant streaming.",
-  keywords: ["movy", "movy.live", "free movies", "watch tv shows online", "streaming site", "high quality movies", "entertainment"],
-  alternates: {
-    canonical: "https://movy.live",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+export async function generateMetadata(): Promise<Metadata> {
+  let host = "";
+  try {
+    const headerList = await headers();
+    host = headerList.get("x-forwarded-host") || headerList.get("host") || "";
+  } catch {
+    // fallback for build / static pre-rendering
+  }
+
+  const site = getSiteConfig(host);
+
+  return {
+    metadataBase: new URL(site.domain),
+    title: site.title,
+    description: site.description,
+    keywords: site.keywords,
+    alternates: {
+      canonical: site.domain,
+    },
+    robots: {
       index: true,
       follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
     },
-  },
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon.svg", type: "image/svg+xml" },
-      { url: "/icon.svg", type: "image/svg+xml" },
-    ],
-    shortcut: "/favicon.ico",
-    apple: "/icon.svg",
-  },
-  openGraph: {
-    title: "Movy | Watch Free Movies and TV Shows Online",
-    description: "Movy offers free access to the latest movies and TV shows in high quality. Enjoy a vast library of entertainment with instant streaming.",
-    url: "https://movy.live",
-    siteName: "Movy",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Movy | Watch Free Movies and TV Shows Online",
-    description: "Movy offers free access to the latest movies and TV shows in high quality. Enjoy a vast library of entertainment with instant streaming.",
-  },
-};
+    icons: {
+      icon: [
+        { url: "/favicon.ico", sizes: "any" },
+        { url: "/favicon.svg", type: "image/svg+xml" },
+        { url: "/icon.svg", type: "image/svg+xml" },
+      ],
+      shortcut: "/favicon.ico",
+      apple: "/icon.svg",
+    },
+    openGraph: {
+      title: site.title,
+      description: site.description,
+      url: site.domain,
+      siteName: site.brandName,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: site.title,
+      description: site.description,
+    },
+  };
+}
 
 export default function RootLayout({
   children,
